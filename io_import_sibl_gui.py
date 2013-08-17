@@ -157,6 +157,31 @@ class PreferencesSIBLGUI(AddonPreferences):
         layout.prop(self, "port")
         layout.prop(self, "sibl_gui_path")
 
+
+class ImportSIBLGUI(Operator, ImportHelper):
+    """Import image-based lighting setup from sIBL GUI loader script."""
+    bl_idname = "import_sibl_gui.script_import"
+    bl_label = "Load sIBL GUI script (.py)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    # ImportHelper mixin class uses this
+    filename_ext = ".py"
+
+    filter_glob = StringProperty(default="*.py", options={'HIDDEN'})
+
+    def execute(self, context):
+        script_dir = path.dirname(self.filepath)
+        if script_dir not in sys.path:
+            sys.path.append(script_dir)
+        import sIBL_Blender_Cycles_Import as sibl_gui
+        reload(sibl_gui)
+
+        bpy.utils.register_class(sibl_gui.SetupSIBL)
+        bpy.ops.import_sibl_gui.setup_sibl()
+        bpy.utils.unregister_class(sibl_gui.SetupSIBL)
+
+        return {'FINISHED'}
+
 class PanelSIBLGUI(Panel):
     """Panel in the scene context for connecting to sIBL GUI."""
     bl_idname = "IMPORT_SIBL_GUI_server"
@@ -181,35 +206,8 @@ class PanelSIBLGUI(Panel):
         else:
             row.label(text="TCP Server Not Running")
         row = layout.row()
-#        row.prop(bpy.ops.import_sibl_guil.start_server, "port")
         row.operator("import_sibl_gui.start_server")
         row.operator("import_sibl_gui.stop_server")
-
-class ImportSIBLGUI(Operator, ImportHelper):
-    """Import image-based lighting setup from sIBL GUI loader script."""
-    bl_idname = "import_sibl_gui.script_import"
-    bl_label = "Load sIBL GUI script (.py)"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    # ImportHelper mixin class uses this
-    filename_ext = ".py"
-
-    filter_glob = StringProperty(default="*.py", options={'HIDDEN'})
-
-    def execute(self, context):
-        script_dir = path.dirname(self.filepath)
-        if script_dir not in sys.path:
-            sys.path.append(script_dir)
-        import sIBL_Blender_Cycles_Import as sibl_gui
-        if 'setup_sibl' in dir(bpy.ops.import_sibl_gui):
-            bpy.utils.unregister_class(sibl_gui.SetupSIBL)
-
-        reload(sibl_gui)
-        bpy.utils.register_class(sibl_gui.SetupSIBL)
-
-        bpy.ops.import_sibl_gui.setup_sibl()
-
-        return {'FINISHED'}
 
 def menu_func_import(self, context):
     self.layout.operator(ImportSIBLGUI.bl_idname,

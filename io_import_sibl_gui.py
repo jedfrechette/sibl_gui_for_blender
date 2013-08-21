@@ -82,8 +82,8 @@ def set_sibl_gui(self, value):
 class TCPHandler(BaseRequestHandler):
     """Handle TCP  communication with sIBL GUI client."""
     def handle(self):
-        self.data = self.request.recv(1024).strip()
-        bpy.ops.import_sibl_gui.script_import(filepath=self.data.decode('utf-8'))
+        bpy.sibl_gui_server.filepath = self.request.recv(1024).strip().decode('utf-8')
+        bpy.sibl_gui_server.is_dirty = True
 
 class StartTCPServer(Operator):
     """Start sIBL GUI TCP server"""
@@ -96,6 +96,8 @@ class StartTCPServer(Operator):
                 host = context.user_preferences.addons[__name__].preferences.hostname
                 port = context.user_preferences.addons[__name__].preferences.port
                 bpy.sibl_gui_server = ServerSIBLGUI((host, port), TCPHandler)
+                bpy.sibl_gui_server.is_dirty = False
+                bpy.ops.import_sibl_gui.handle_server()
             except OSError as error:
                 if error.errno == 98:
                     self.report({'ERROR'}, "Address already in use")
@@ -120,6 +122,28 @@ class StopTCPServer(Operator):
 class ServerSIBLGUI(ThreadingMixIn, TCPServer):
     """TCP server for connecting to sIBL GUI."""
     allow_reuse_address = True
+
+class ServerHandler(Operator):
+    """Handle importing script when server changes."""
+    bl_idname = "import_sibl_gui.handle_server"
+    bl_label = "Watch sIBL GUI server"
+
+    _timer = None
+
+    def modal(self, context, event):
+        if event.type == 'TIMER':
+            if not bpy.sibl_gui_server:
+                return {'CANCELLED'}
+            elif bpy.sibl_gui_server.is_dirty:
+                bpy.ops.import_sibl_gui.script_import(filepath=bpy.sibl_gui_server.filepath)
+                bpy.sibl_gui_server.is_dirty = False
+        return {'PASS_THROUGH'}
+
+    def execute(self, context):
+        self._timer = context.window_manager.event_timer_add(0.1,
+                                                             context.window)
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
 
 class LaunchSIBLGUI(Operator):
     """Launch sIBL GUI application"""

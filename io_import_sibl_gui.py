@@ -201,7 +201,11 @@ class ImportSIBLGUI(Operator, ImportHelper):
         reload(sibl_gui)
 
         bpy.utils.register_class(sibl_gui.SetupSIBL)
-        bpy.ops.import_sibl_gui.setup_sibl()
+        try:
+            bpy.ops.import_sibl_gui.setup_sibl()
+        except RuntimeError:
+            self.report({'INFO'}, 'Importing %s failed, check console for ' \
+                        'more information.' % self.filepath)
         bpy.utils.unregister_class(sibl_gui.SetupSIBL)
 
         return {'FINISHED'}

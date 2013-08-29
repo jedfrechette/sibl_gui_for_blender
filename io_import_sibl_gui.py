@@ -17,14 +17,14 @@
 #
 # ***** END GPL LICENCE BLOCK *****
 
-bl_info = {"name": "sIBL_GUI for Blender",
+bl_info = {"name": "sIBL GUI for Blender",
            "description": "Import image-based lighting setup from sIBL GUI.",
            "author": "Jed Frechette <jedfrechette@gmail.com>",
            "version": (0, 1),
            "blender": (2, 68, 0),
            "location": "File > Import",
-           "wiki_url": "TODO: Add to wiki",
-           "tracker_url": "TODO: Add to tracker",
+           "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/Import-Export/sIBL_GUI",
+           "tracker_url": "https://projects.blender.org/tracker/index.php?func=detail&aid=36606",
            "category": "Import-Export"}
 
 # Standard library imports
@@ -169,7 +169,7 @@ class PreferencesSIBLGUI(AddonPreferences):
                               description="sIBL GUI command host name")
     port = IntProperty(name="Port", default=2048,
                        description="sIBL GUI command port")
-    sibl_gui_path = StringProperty(name="sIBL GUI Location",
+    sibl_gui_path = StringProperty(name="sIBL GUI Executable",
                                    description="Path to sIBL GUI executable",
                                    get=get_sibl_gui,
                                    set=set_sibl_gui,

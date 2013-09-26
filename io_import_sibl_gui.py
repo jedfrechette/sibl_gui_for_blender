@@ -31,7 +31,7 @@ bl_info = {"name": "sIBL GUI for Blender",
 import sys
 from imp import reload
 from ipaddress import ip_address
-from os import path
+from os import access, path, X_OK
 from shutil import which
 from socketserver import BaseRequestHandler, ThreadingMixIn, TCPServer
 from subprocess import Popen
@@ -75,9 +75,17 @@ def get_sibl_gui(self):
 
 def set_sibl_gui(self, value):
     """Return full path to sIBL GUI or empty string."""
-    if not path.isfile(value):
-        value = ''
-    self['sibl_gui_path'] = value
+    if sys.platform == 'darwin' and path.isdir(value):
+        value = path.join(value, 'Contents', 'MacOS', 'launcher')
+        print('Updating .app path to %s ' % value)
+    if path.isfile(value) == True and access(value, X_OK) == True:
+        self['sibl_gui_path'] = value
+    else:
+        #TODO: Currently can't generate a report outside of an Operator, but
+        #      but this is on the todo list:
+        #      http://blender.stackexchange.com/questions/1826/operator-report-outside-operators
+        print("ERROR: %s is not an executable file, ." % value)
+        self['sibl_gui_path'] = ''
 
 class TCPHandler(BaseRequestHandler):
     """Handle TCP  communication with sIBL GUI client."""
@@ -169,11 +177,24 @@ class PreferencesSIBLGUI(AddonPreferences):
                               description="sIBL GUI command host name")
     port = IntProperty(name="Port", default=2048,
                        description="sIBL GUI command port")
-    sibl_gui_path = StringProperty(name="sIBL GUI Executable",
-                                   description="Path to sIBL GUI executable",
-                                   get=get_sibl_gui,
-                                   set=set_sibl_gui,
-                                   subtype="FILE_PATH")
+    if sys.platform == 'darwin':
+        sibl_gui_path = StringProperty(name="sIBL GUI executable",
+                                       description="launcher inside sIBL GUI .app directory",
+                                       get=get_sibl_gui,
+                                       set=set_sibl_gui,
+                                       subtype="FILE_PATH")
+    elif sys.platform == 'win32':
+        sibl_gui_path = StringProperty(name="sIBL GUI executable",
+                                       description="sIBL_GUI.exe file",
+                                       get=get_sibl_gui,
+                                       set=set_sibl_gui,
+                                       subtype="FILE_PATH")
+    else:
+        sibl_gui_path = StringProperty(name="sIBL GUI executable",
+                                       description="sIBL GUI executable file",
+                                       get=get_sibl_gui,
+                                       set=set_sibl_gui,
+                                       subtype="FILE_PATH")
 
     def draw(self, context):
         layout = self.layout

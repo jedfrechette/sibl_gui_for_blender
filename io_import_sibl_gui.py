@@ -248,8 +248,9 @@ def register():
     bpy.types.INFO_MT_file_import.append(menu_func_import)
 
 def unregister():
-    bpy.sibl_gui_server.shutdown()
-    del(bpy.sibl_gui_server)
+    if bpy.sibl_gui_server:
+        bpy.sibl_gui_server.shutdown()
+        del(bpy.sibl_gui_server)
 
     bpy.utils.unregister_module(__name__)
     bpy.types.INFO_MT_file_import.remove(menu_func_import)

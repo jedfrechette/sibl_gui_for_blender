@@ -75,6 +75,9 @@ def get_sibl_gui(self):
 
 def set_sibl_gui(self, value):
     """Return full path to sIBL GUI or empty string."""
+    if not value:
+        self['sibl_gui_path'] = value
+        return
     if sys.platform == 'darwin' and path.isdir(value):
         value = path.join(value, 'Contents', 'MacOS', 'launcher')
         print('Updating .app path to %s ' % value)
@@ -84,8 +87,8 @@ def set_sibl_gui(self, value):
         #TODO: Currently can't generate a report outside of an Operator, but
         #      but this is on the todo list:
         #      http://blender.stackexchange.com/questions/1826/operator-report-outside-operators
-        print("ERROR: %s is not an executable file, ." % value)
-        self['sibl_gui_path'] = ''
+        print("ERROR: %s is not an executable file, reverting to last value." % value)
+        self['sibl_gui_path'] = get_sibl_gui(self)
 
 class TCPHandler(BaseRequestHandler):
     """Handle TCP  communication with sIBL GUI client."""
@@ -225,8 +228,9 @@ class ImportSIBLGUI(Operator, ImportHelper):
         try:
             bpy.ops.import_sibl_gui.setup_sibl()
         except RuntimeError:
-            self.report({'INFO'}, 'Importing %s failed, check console for ' \
-                        'more information.' % self.filepath)
+            #TODO: Report this as a popup rather than printing to console.
+            self.report({'ERROR'}, 'Importing %s failed, check system console ' \
+                        'for more information.' % self.filepath)
         bpy.utils.unregister_class(sibl_gui.SetupSIBL)
 
         return {'FINISHED'}

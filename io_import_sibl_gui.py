@@ -20,7 +20,7 @@
 bl_info = {"name": "sIBL GUI for Blender",
            "description": "Import image-based lighting setup from sIBL GUI.",
            "author": "Jed Frechette <jedfrechette@gmail.com>",
-           "version": (0, 2),
+           "version": (0, 3),
            "blender": (2, 68, 0),
            "location": "File > Import",
            "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/Import-Export/sIBL_GUI",

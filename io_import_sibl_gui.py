@@ -20,7 +20,7 @@
 bl_info = {"name": "sIBL GUI for Blender",
            "description": "Import image-based lighting setup from sIBL GUI.",
            "author": "Jed Frechette <jedfrechette@gmail.com>",
-           "version": (0, 3),
+           "version": (0, 4),
            "blender": (2, 68, 0),
            "location": "File > Import",
            "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/Import-Export/sIBL_GUI",
@@ -124,7 +124,19 @@ class StartTCPServer(Operator):
                 bpy.ops.import_sibl_gui.handle_server()
             except OSError as error:
                 if error.errno == 98:
-                    self.report({'ERROR'}, "Address already in use")
+                    self.report({'ERROR'},
+                                "OSError %s: %s:%s already in use. Try a "
+                                "different port." % 
+                                (error.errno, host, port))
+                    return {'CANCELLED'}
+                elif error.errno == 10013:
+                    self.report({'ERROR'},
+                                "OSError %s: Unable to access %s:%s. Try a "
+                                "different port." % 
+                                (error.errno, host, port))
+                    return {'CANCELLED'}
+                else:
+                    self.report({'ERROR'}, "Unknown OSError: %s" % error.errno)
                     return {'CANCELLED'}
             server_thread = Thread(target=bpy.sibl_gui_server.serve_forever)
             server_thread.daemon = True
